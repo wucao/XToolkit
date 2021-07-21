@@ -16,14 +16,14 @@ public class HttpUtil {
     /**
      * GET 请求
      */
-    public String get(String url) throws IOException {
+    public static String get(String url) throws IOException {
         return get(url, null);
     }
 
     /**
      * GET 请求（带参数）
      */
-    public String get(String url, Map<String, String> queryParameters) throws IOException {
+    public static String get(String url, Map<String, String> queryParameters) throws IOException {
         HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
         if (queryParameters != null) {
             for (Map.Entry<String, String> queryParameter : queryParameters.entrySet()) {
@@ -45,7 +45,7 @@ public class HttpUtil {
     /**
      * POST 请求（请求 BODY 为 form 表单）
      */
-    public String postForm(String url, Map<String, String> formData) throws IOException {
+    public static String postForm(String url, Map<String, String> formData) throws IOException {
 
         FormBody.Builder requestBodyBuilder = new FormBody.Builder();
         if (formData != null) {
@@ -70,7 +70,7 @@ public class HttpUtil {
     /**
      * POST 请求（请求 BODY 为 json，带 header）
      */
-    public String postJson(String url, String requestBody, Map<String, String> requestHeaders) throws IOException {
+    public static String postJson(String url, String requestBody, Map<String, String> requestHeaders) throws IOException {
         RequestBody body = RequestBody.create(requestBody, MediaType.parse("application/json; charset=utf-8"));
         Request.Builder builder = new Request.Builder()
                 .url(url)
@@ -92,14 +92,14 @@ public class HttpUtil {
     /**
      * POST 请求（请求 BODY 为 json）
      */
-    public String postJson(String url, String requestBody) throws IOException {
+    public static String postJson(String url, String requestBody) throws IOException {
         return postJson(url, requestBody, null);
     }
 
     /**
      * GET 请求下载文件
      */
-    public void downloadFile(String url, File localFile) throws IOException {
+    public static void downloadFile(String url, File localFile) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -116,14 +116,14 @@ public class HttpUtil {
     /**
      * POST multipart/form-data 上传单个文件
      */
-    public String uploadFile(String url, String fileParameterName, File file) throws IOException {
+    public static String uploadFile(String url, String fileParameterName, File file) throws IOException {
         return uploadFile(url, null, Collections.singletonMap(fileParameterName, file), null);
     }
 
     /**
      * POST multipart/form-data 上传文件
      */
-    public String uploadFile(String url, Map<String, String> bodyParameters, Map<String, File> files, Map<String, String> requestHeaders) throws IOException {
+    public static String uploadFile(String url, Map<String, String> bodyParameters, Map<String, File> files, Map<String, String> requestHeaders) throws IOException {
 
         MultipartBody.Builder bodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
         if (bodyParameters != null) {

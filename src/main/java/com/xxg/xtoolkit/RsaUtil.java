@@ -5,10 +5,15 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -130,5 +135,25 @@ public class RsaUtil {
      */
     public static PrivateKey getPrivateKey(File file) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         return getPrivateKey(new String(Files.readAllBytes(Paths.get(file.getPath()))));
+    }
+
+    /**
+     * 从证书文件中获取公钥
+     * 第一行一般是 -----BEGIN CERTIFICATE-----
+     */
+    public static PublicKey getPublicKeyFromCertificate(InputStream inputStream) throws CertificateException {
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        X509Certificate certificate = (X509Certificate) certificateFactory.generateCertificate(inputStream);
+        return certificate.getPublicKey();
+    }
+
+    /**
+     * 从证书文件中获取公钥
+     * 第一行一般是 -----BEGIN CERTIFICATE-----
+     */
+    public static PublicKey getPublicKeyFromCertificate(File file) throws IOException, CertificateException {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            return getPublicKeyFromCertificate(inputStream);
+        }
     }
 }

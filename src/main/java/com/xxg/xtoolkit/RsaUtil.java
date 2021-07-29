@@ -180,4 +180,27 @@ public class RsaUtil {
             return getPublicKeyFromPkcs12Certificate(inputStream, password);
         }
     }
+
+    /**
+     * 从 .p12/.pfx 证书中获取私钥
+     */
+    public static PrivateKey getPrivateKeyFromPkcs12Certificate(InputStream inputStream, String password) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException {
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        keyStore.load(inputStream, password.toCharArray());
+        Enumeration<String> aliases = keyStore.aliases();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            return (PrivateKey) keyStore.getKey(alias, password.toCharArray());
+        }
+        throw new IOException("文件中不包含证书");
+    }
+
+    /**
+     * 从 .p12/.pfx 证书中获取私钥
+     */
+    public static PrivateKey getPrivateKeyFromPkcs12Certificate(File file, String password) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            return getPrivateKeyFromPkcs12Certificate(inputStream, password);
+        }
+    }
 }

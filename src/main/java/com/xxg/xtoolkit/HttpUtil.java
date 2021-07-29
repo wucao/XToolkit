@@ -35,7 +35,7 @@ public class HttpUtil {
                 .url(httpUrl)
                 .build();
         try (Response response = defaultOkHttpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            checkSuccessful(response);
             return response.body().string();
         } catch (Exception e) {
             throw new IOException("请求异常，URL：" + httpUrl, e);
@@ -60,7 +60,7 @@ public class HttpUtil {
                 .post(body);
         Request request = builder.build();
         try (Response response = defaultOkHttpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            checkSuccessful(response);
             return response.body().string();
         } catch (Exception e) {
             throw new IOException("请求异常，URL：" + url + "，RequestBody：" + formData, e);
@@ -82,7 +82,7 @@ public class HttpUtil {
         }
         Request request = builder.build();
         try (Response response = defaultOkHttpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            checkSuccessful(response);
             return response.body().string();
         } catch (Exception e) {
             throw new IOException("请求异常，URL：" + url + "，RequestBody：" + requestBody, e);
@@ -104,7 +104,7 @@ public class HttpUtil {
                 .url(url)
                 .build();
         try (Response response = defaultOkHttpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            checkSuccessful(response);
             try (BufferedSink sink = Okio.buffer(Okio.sink(localFile))) {
                 sink.writeAll(response.body().source());
             }
@@ -148,10 +148,30 @@ public class HttpUtil {
         }
         Request request = builder.build();
         try (Response response = defaultOkHttpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            checkSuccessful(response);
             return response.body().string();
         } catch (Exception e) {
             throw new IOException("请求异常，URL：" + url, e);
+        }
+    }
+
+    /**
+     * 检查状态码
+     */
+    private static void checkSuccessful(Response response) throws IOException {
+        if (!response.isSuccessful()) {
+            String body = null;
+            try {
+                body = response.body().string();
+            } catch (Exception e) {
+                e.printStackTrace(); // 忽略异常，仅输出异常信息
+            }
+
+            if (body != null) {
+                throw new IOException("Unexpected code: " + response + ", Response Body: " + body);
+            } else {
+                throw new IOException("Unexpected code: " + response);
+            }
         }
     }
 }

@@ -168,7 +168,7 @@ public class HttpUtil {
             }
 
             if (body != null) {
-                throw new IOException("Unexpected code: " + response + ", Response Body: " + body);
+                throw new IOException("Unexpected code: " + response + ", Response body: " + body);
             } else {
                 throw new IOException("Unexpected code: " + response);
             }

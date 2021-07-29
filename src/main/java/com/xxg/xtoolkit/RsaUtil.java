@@ -18,6 +18,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.Enumeration;
 
 public class RsaUtil {
 
@@ -154,6 +155,29 @@ public class RsaUtil {
     public static PublicKey getPublicKeyFromCertificate(File file) throws IOException, CertificateException {
         try (FileInputStream inputStream = new FileInputStream(file)) {
             return getPublicKeyFromCertificate(inputStream);
+        }
+    }
+
+    /**
+     * 从 .p12/.pfx 证书中获取公钥
+     */
+    public static PublicKey getPublicKeyFromPkcs12Certificate(InputStream inputStream, String password) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        keyStore.load(inputStream, password.toCharArray());
+        Enumeration<String> aliases = keyStore.aliases();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            return keyStore.getCertificate(alias).getPublicKey();
+        }
+        throw new IOException("文件中不包含证书");
+    }
+
+    /**
+     * 从 .p12/.pfx 证书中获取公钥
+     */
+    public static PublicKey getPublicKeyFromPkcs12Certificate(File file, String password) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            return getPublicKeyFromPkcs12Certificate(inputStream, password);
         }
     }
 }

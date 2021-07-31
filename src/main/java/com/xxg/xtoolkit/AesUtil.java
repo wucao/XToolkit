@@ -28,6 +28,14 @@ public class AesUtil {
         return result;
     }
 
+    public static byte[] encrypt(String algorithm, byte[] data, byte[] key) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        return encrypt(algorithm, data, getSecretKey(key));
+    }
+
+    public static byte[] decrypt(String algorithm, byte[] data, byte[] key) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        return decrypt(algorithm, data, getSecretKey(key));
+    }
+
     public static byte[] encrypt(String algorithm, byte[] data, Key key, AlgorithmParameterSpec parameter) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
         Cipher cipher = Cipher.getInstance(algorithm);
         cipher.init(Cipher.ENCRYPT_MODE, key, parameter);
@@ -40,6 +48,14 @@ public class AesUtil {
         cipher.init(Cipher.DECRYPT_MODE, key, parameter);
         byte[] result = cipher.doFinal(data);
         return result;
+    }
+
+    public static byte[] encrypt(String algorithm, byte[] data, byte[] key, byte[] iv) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+        return encrypt(algorithm, data, getSecretKey(key), getIvParameter(iv));
+    }
+
+    public static byte[] decrypt(String algorithm, byte[] data, byte[] key, byte[] iv) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidAlgorithmParameterException {
+        return decrypt(algorithm, data, getSecretKey(key), getIvParameter(iv));
     }
 
     /**

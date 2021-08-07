@@ -123,12 +123,12 @@ public class AesUtil {
         return gcmDecrypt(data, key, parameter, null);
     }
 
-    public static byte[] gcmEncrypt(byte[] data, byte[] key, byte[] iv) throws NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException {
-        return gcmEncrypt(data, key, iv, null);
+    public static byte[] gcmEncrypt(byte[] data, byte[] key, byte[] iv, int tagLength) throws NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException {
+        return gcmEncrypt(data, key, iv, null, tagLength);
     }
 
-    public static byte[] gcmDecrypt(byte[] data, byte[] key, byte[] iv) throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        return gcmDecrypt(data, key, iv, null);
+    public static byte[] gcmDecrypt(byte[] data, byte[] key, byte[] iv, int tagLength) throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        return gcmDecrypt(data, key, iv, null, tagLength);
     }
 
     public static byte[] gcmEncrypt(byte[] data, Key key, GCMParameterSpec parameter, byte[] aad) throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
@@ -139,12 +139,12 @@ public class AesUtil {
         return decrypt(AES_GCM_NOPADDING, data, key, parameter, aad);
     }
 
-    public static byte[] gcmEncrypt(byte[] data, byte[] key, byte[] iv, byte[] aad) throws NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException {
-        return gcmEncrypt(data, getSecretKey(key), getGCMParameterSpec(iv), aad);
+    public static byte[] gcmEncrypt(byte[] data, byte[] key, byte[] iv, byte[] aad, int tagLength) throws NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException {
+        return gcmEncrypt(data, getSecretKey(key), getGCMParameterSpec(iv, tagLength), aad);
     }
 
-    public static byte[] gcmDecrypt(byte[] data, byte[] key, byte[] iv, byte[] aad) throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        return gcmDecrypt(data, getSecretKey(key), getGCMParameterSpec(iv), aad);
+    public static byte[] gcmDecrypt(byte[] data, byte[] key, byte[] iv, byte[] aad, int tagLength) throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        return gcmDecrypt(data, getSecretKey(key), getGCMParameterSpec(iv, tagLength), aad);
     }
 
     /**
@@ -162,7 +162,10 @@ public class AesUtil {
         return new GCMParameterSpec(authenticationTagLength, iv);
     }
 
-    public static GCMParameterSpec getGCMParameterSpec(byte[] iv) {
-        return getGCMParameterSpec(128, iv);
+    /**
+     * tagLength 是 authentication tag 字节数，必须是 16、15、14、13、12 之一
+     */
+    public static GCMParameterSpec getGCMParameterSpec(byte[] iv, int tagLength) {
+        return getGCMParameterSpec(tagLength * 8, iv);
     }
 }

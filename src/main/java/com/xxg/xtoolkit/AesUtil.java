@@ -12,6 +12,8 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 public class AesUtil {
 
@@ -145,6 +147,28 @@ public class AesUtil {
 
     public static byte[] gcmDecrypt(byte[] data, byte[] key, byte[] iv, byte[] aad, int tagLength) throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         return gcmDecrypt(data, getSecretKey(key), getGCMParameterSpec(iv, tagLength), aad);
+    }
+
+    public static byte[] gcmDecrypt(byte[] ciphertext, byte[] tag, byte[] key, byte[] iv, byte[] aad) throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+
+        // concatenate two byte arrays
+        byte[] data = new byte[ciphertext.length + tag.length];
+        System.arraycopy(ciphertext, 0, data, 0, ciphertext.length);
+        System.arraycopy(tag, 0, data, ciphertext.length, tag.length);
+
+        return gcmDecrypt(data, key, iv, aad, tag.length * 8);
+    }
+
+    public static byte[] gcmDecrypt(byte[] ciphertext, byte[] tag, byte[] key, byte[] iv) throws NoSuchPaddingException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        return gcmDecrypt(ciphertext, tag, key, iv, null);
+    }
+
+    public static byte[] getGcmCiphertext(byte[] data, int tagLength) {
+        return Arrays.copyOfRange(data, 0, data.length - tagLength / 8);
+    }
+
+    public static byte[] getGcmAuthenticationTag(byte[] data, int tagLength) {
+        return Arrays.copyOfRange(data, data.length - tagLength / 8, data.length);
     }
 
     /**

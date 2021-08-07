@@ -163,9 +163,9 @@ public class AesUtil {
     }
 
     /**
-     * tagLength 是 authentication tag 字节数，必须是 16、15、14、13、12 之一
+     * @param tagLength authentication tag 比特位数，必须是 128、120、112、104、96 之一
      */
     public static GCMParameterSpec getGCMParameterSpec(byte[] iv, int tagLength) {
-        return getGCMParameterSpec(tagLength * 8, iv);
+        return getGCMParameterSpec(tagLength, iv);
     }
 }

@@ -4,26 +4,35 @@ import okhttp3.*;
 import okio.BufferedSink;
 import okio.Okio;
 
+import javax.net.ssl.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-public class HttpUtil {
+public class OkHttpUtil {
 
-    private static final OkHttpClient defaultOkHttpClient = new OkHttpClient();;
+    private OkHttpClient okHttpClient = new OkHttpClient();
+
+    public void setOkHttpClient(OkHttpClient okHttpClient) {
+        this.okHttpClient = okHttpClient;
+    }
 
     /**
      * GET 请求
      */
-    public static String get(String url) throws IOException {
+    public String get(String url) throws IOException {
         return get(url, null);
     }
 
     /**
      * GET 请求（带参数）
      */
-    public static String get(String url, Map<String, String> queryParameters) throws IOException {
+    public String get(String url, Map<String, String> queryParameters) throws IOException {
         HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
         if (queryParameters != null) {
             for (Map.Entry<String, String> queryParameter : queryParameters.entrySet()) {
@@ -34,7 +43,7 @@ public class HttpUtil {
         Request request = new Request.Builder()
                 .url(httpUrl)
                 .build();
-        try (Response response = defaultOkHttpClient.newCall(request).execute()) {
+        try (Response response = okHttpClient.newCall(request).execute()) {
             checkSuccessful(response);
             return response.body().string();
         } catch (Exception e) {
@@ -45,7 +54,7 @@ public class HttpUtil {
     /**
      * POST 请求（请求 BODY 为 form 表单）
      */
-    public static String postForm(String url, Map<String, String> formData) throws IOException {
+    public String postForm(String url, Map<String, String> formData) throws IOException {
 
         FormBody.Builder requestBodyBuilder = new FormBody.Builder();
         if (formData != null) {
@@ -59,7 +68,7 @@ public class HttpUtil {
                 .url(url)
                 .post(body);
         Request request = builder.build();
-        try (Response response = defaultOkHttpClient.newCall(request).execute()) {
+        try (Response response = okHttpClient.newCall(request).execute()) {
             checkSuccessful(response);
             return response.body().string();
         } catch (Exception e) {
@@ -70,7 +79,7 @@ public class HttpUtil {
     /**
      * POST 请求（请求 BODY 为 json，带 header）
      */
-    public static String postJson(String url, String requestBody, Map<String, String> requestHeaders) throws IOException {
+    public String postJson(String url, String requestBody, Map<String, String> requestHeaders) throws IOException {
         RequestBody body = RequestBody.create(requestBody, MediaType.parse("application/json; charset=utf-8"));
         Request.Builder builder = new Request.Builder()
                 .url(url)
@@ -81,7 +90,7 @@ public class HttpUtil {
             }
         }
         Request request = builder.build();
-        try (Response response = defaultOkHttpClient.newCall(request).execute()) {
+        try (Response response = okHttpClient.newCall(request).execute()) {
             checkSuccessful(response);
             return response.body().string();
         } catch (Exception e) {
@@ -92,18 +101,18 @@ public class HttpUtil {
     /**
      * POST 请求（请求 BODY 为 json）
      */
-    public static String postJson(String url, String requestBody) throws IOException {
+    public String postJson(String url, String requestBody) throws IOException {
         return postJson(url, requestBody, null);
     }
 
     /**
      * GET 请求下载文件
      */
-    public static void downloadFile(String url, File localFile) throws IOException {
+    public void downloadFile(String url, File localFile) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .build();
-        try (Response response = defaultOkHttpClient.newCall(request).execute()) {
+        try (Response response = okHttpClient.newCall(request).execute()) {
             checkSuccessful(response);
             try (BufferedSink sink = Okio.buffer(Okio.sink(localFile))) {
                 sink.writeAll(response.body().source());
@@ -116,14 +125,14 @@ public class HttpUtil {
     /**
      * POST multipart/form-data 上传单个文件
      */
-    public static String uploadFile(String url, String fileParameterName, File file) throws IOException {
+    public String uploadFile(String url, String fileParameterName, File file) throws IOException {
         return uploadFile(url, null, Collections.singletonMap(fileParameterName, file), null);
     }
 
     /**
      * POST multipart/form-data 上传文件
      */
-    public static String uploadFile(String url, Map<String, String> bodyParameters, Map<String, File> files, Map<String, String> requestHeaders) throws IOException {
+    public String uploadFile(String url, Map<String, String> bodyParameters, Map<String, File> files, Map<String, String> requestHeaders) throws IOException {
 
         MultipartBody.Builder bodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
         if (bodyParameters != null) {
@@ -147,7 +156,7 @@ public class HttpUtil {
             }
         }
         Request request = builder.build();
-        try (Response response = defaultOkHttpClient.newCall(request).execute()) {
+        try (Response response = okHttpClient.newCall(request).execute()) {
             checkSuccessful(response);
             return response.body().string();
         } catch (Exception e) {
@@ -158,7 +167,7 @@ public class HttpUtil {
     /**
      * 检查状态码
      */
-    private static void checkSuccessful(Response response) throws IOException {
+    private void checkSuccessful(Response response) throws IOException {
         if (!response.isSuccessful()) {
             String body = null;
             try {
@@ -173,5 +182,47 @@ public class HttpUtil {
                 throw new IOException("Unexpected code: " + response);
             }
         }
+    }
+
+
+
+    /**
+     * 创建 TLS 双向认证（ mutual TLS authentication ）的 OkHttpClient
+     *
+     * @param pkcs12Certificate 传入证书文件的输入流，文件一般是 .p12/.pfx 格式
+     * @param keyStorePassword 传入证书对应的密码，微信支付一般用商户号作为证书密码
+     */
+    public OkHttpClient createMutualTLSClient(InputStream pkcs12Certificate, char[] keyStorePassword) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, IOException, CertificateException, KeyManagementException {
+
+        // 加载 keyStore
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        keyStore.load(pkcs12Certificate, keyStorePassword);
+
+        // 创建密钥管理器
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(keyStore, keyStorePassword);
+
+        // 初始化 SSLContext
+        // 参考： org.apache.http.ssl.SSLContexts.custom().loadKeyMaterial(keyStore, keyStorePassword).build()
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(kmf.getKeyManagers(), null, null);
+
+        // 默认的 TrustManager
+        // 参考 okhttp3.internal.Util.platformTrustManager()： https://github.com/square/okhttp/blob/parent-3.14.9/okhttp/src/main/java/okhttp3/internal/Util.java#L636
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
+                TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init((KeyStore) null);
+        TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+        if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
+            throw new IllegalStateException("Unexpected default trust managers:"
+                    + Arrays.toString(trustManagers));
+        }
+
+        // 创建 OkHttpClient 客户端
+        OkHttpClient client = new OkHttpClient.Builder()
+                .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustManagers[0])
+                .build();
+
+        return client;
     }
 }

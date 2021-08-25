@@ -192,7 +192,7 @@ public class OkHttpUtil {
      * @param pkcs12Certificate 传入证书文件的输入流，文件一般是 .p12/.pfx 格式
      * @param keyStorePassword 传入证书对应的密码，微信支付一般用商户号作为证书密码
      */
-    public OkHttpClient createMutualTLSClient(InputStream pkcs12Certificate, char[] keyStorePassword) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, IOException, CertificateException, KeyManagementException {
+    public static OkHttpClient createMutualTLSClient(InputStream pkcs12Certificate, char[] keyStorePassword) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, IOException, CertificateException, KeyManagementException {
 
         // 加载 keyStore
         KeyStore keyStore = KeyStore.getInstance("PKCS12");

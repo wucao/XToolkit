@@ -16,7 +16,7 @@ public class JsonUtil {
 
         SNAKE_CASE_MAPPER = new ObjectMapper();
         SNAKE_CASE_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        SNAKE_CASE_MAPPER.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+        SNAKE_CASE_MAPPER.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     }
 
     public static String toJSONString(Object obj) throws JsonProcessingException {
